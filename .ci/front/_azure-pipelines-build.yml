@@ -1,18 +1,18 @@
-:
- - task: NodeTool@0
-   inputs:
-    versionSpec: '20.x' # Adaptez-le à votre version.
-   displayName: 'Install Node.js'
+steps:
+  - task: NodeTool@0
+    inputs:
+      versionSpec: '20.x' # Adaptez-le Ã  votre version.
+    displayName: 'Install Node.js'
 
- - script: npm i -g pnpm
-   displayName: 'Install pnpm'
+  - script: npm i -g pnpm
+    displayName: 'Install pnpm'
 
- - script: |
-     cd $(frontProjectPath)
-     pnpm i
-     displayName: 'Install dependencies'
-
- - script: |
-     cd $(frontProjectPath)
-     pnpm run build
-   displayName: 'Build project'
+  - script: |
+      cd $(frontProjectPath)
+      pnpm i
+    displayName: 'Install dependencies'
+    
+  - script: |
+      cd $(frontProjectPath)
+      pnpm run build
+    displayName: 'Build project'

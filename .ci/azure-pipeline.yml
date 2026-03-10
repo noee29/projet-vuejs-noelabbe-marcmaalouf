@@ -1,21 +1,21 @@
 pool:
- vmImage: 'ubuntu-latest' # Exécuter sur une VM Ubuntu
+  vmImage: 'ubuntu-latest'  # Exécuter sur une VM Ubuntu
 
 trigger:
- - master # Exécuter le pipeline sur chaque push sur master
+  - master # Exécuter le pipeline sur chaque push sur master
 
 variables:
- frontImageNameAndTag: '$(baseImageName)-front:$(env)'
+  frontImageNameAndTag: '$(baseImageName)-front:$(env)'
 
 jobs:
- - job: Front
-   condition: eq(variables.env, 'dev')
-   variables:
-     - group: 'cours-framework-dev'
-   steps:
-     - template: ./front/_azure-pipelines-build.yml
-     - template: ./_docker-build-and-push.yml
-       parameters:
-         dockerfilePath: $(frontProjectPath)/Dockerfile
-         dockerContext: $(frontProjectPath)
-         imageName: $(frontImageNameAndTag)
+  - job: Front
+    condition: eq(variables.env, 'dev')
+    variables:
+      - group: 'cours-framework-dev'
+steps:
+  - template: ./front/_azure-pipelines-build.yml
+  - template: ./_docker-build-and-push.yml
+    parameters:
+      dockerfilePath: $(frontProjectPath)/Dockerfile
+      dockerContext: $(frontProjectPath)
+      imageName:  $(frontImageNameAndTag)

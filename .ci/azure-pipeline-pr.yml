@@ -1,9 +1,10 @@
 trigger: none
+
 pool:
- vmImage: 'ubuntu-latest' # Exécuter sur une VM Ubuntu
+  vmImage: 'ubuntu-latest'  # ExÃ©cuter sur une VM Ubuntu
 jobs:
- - job: Front
-variables:
- - group: 'cours-framework-dev'
-steps:
- - template: ./front/_azure-pipelines-build.yml
+  - job: Front
+    variables:
+      - group: 'cours-framework-dev'
+    steps:  
+      - template: ./front/azure-pipeline-build.yml
