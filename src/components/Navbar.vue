@@ -1,7 +1,7 @@
 <template>
   <nav class="navbar">
     <div class="nav-left">
-      <img :src="logoUrl" alt="SmartCV Logo" />
+      <img :src="logo" alt="SmartCV Logo" />
     </div>
 
     <div class="nav-center">
@@ -17,7 +17,7 @@
 </template>
 
 <script setup>
-import logoUrl from '../Logo_SmartCV.png'
+import logo from "@/assets/images/Logo_SmartCV.png"
 </script>
 
 <style scoped>

@@ -1,6 +1,5 @@
 <template>
   <div class="page">
-    <Navbar />
 
     <div class="content">
       <div class="card">
