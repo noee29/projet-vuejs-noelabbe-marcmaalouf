@@ -52,7 +52,9 @@ const togglePassword = () => {
             <span>Se souvenir de moi</span>
           </label>
 
-          <a href="#" class="forgot-password">Mot de passe oublié ?</a>
+          <RouterLink to="/forgot-password" class="forgot-password">
+            Mot de passe oublié ?
+          </RouterLink>
         </div>
 
         <button type="submit" class="login-btn">Se connecter</button>

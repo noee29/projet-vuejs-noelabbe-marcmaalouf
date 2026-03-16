@@ -1,12 +1,19 @@
 <script setup>
-import authImage from "@/assets/images/Authentification.png"
+import defaultAuthImage from "@/assets/images/Authentification.png"
+
+const props = defineProps({
+  imageSrc: {
+    type: String,
+    default: defaultAuthImage,
+  },
+})
 </script>
 
 <template>
   <div class="auth-page">
     <div class="auth-wrapper">
       <div class="auth-illustration">
-        <img :src="authImage" alt="Illustration authentification" />
+        <img :src="props.imageSrc" alt="Illustration authentification" />
       </div>
 
       <div class="auth-card">
