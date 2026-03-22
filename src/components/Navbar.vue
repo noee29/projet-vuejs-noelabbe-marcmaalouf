@@ -1,16 +1,48 @@
 <script setup>
-import { RouterLink, useRoute } from "vue-router"
+import { ref, computed, onMounted, onUnmounted } from "vue"
+import { RouterLink, useRoute, useRouter } from "vue-router"
+import { onAuthStateChanged } from "firebase/auth"
+import { auth } from "@/firebase"
+import { logoutUser } from "@/services/auth"
+
 import logo from "@/assets/images/Logo_SmartCV.png"
 import authIcon from "@/assets/icons/Icon-auth.png"
 
 const route = useRoute()
+const router = useRouter()
+
+const isAuthenticated = ref(false)
+
+let unsubscribe = null
+
+onMounted(() => {
+  unsubscribe = onAuthStateChanged(auth, (user) => {
+    isAuthenticated.value = !!user
+  })
+})
+
+onUnmounted(() => {
+  if (unsubscribe) unsubscribe()
+})
+
+const isGenererActive = computed(() => route.path.startsWith("/generer"))
+const isHistoriqueActive = computed(() => route.path.startsWith("/historique"))
+
+const handleLogout = async () => {
+  try {
+    await logoutUser()
+    router.push("/login")
+  } catch (error) {
+    console.error("Logout error:", error)
+  }
+}
 </script>
 
 <template>
   <header class="navbar">
     <div class="container">
       <RouterLink to="/" class="logo">
-        <img :src="logo" alt="SmartCV logo"/>
+        <img :src="logo" alt="SmartCV logo" />
       </RouterLink>
 
       <nav class="links">
@@ -18,14 +50,24 @@ const route = useRoute()
           Accueil
         </RouterLink>
 
-        <a href="#">Générer</a>
-        <a href="#">Historique</a>
+        <RouterLink to="/generer" :class="{ active: isGenererActive }">
+          Générer
+        </RouterLink>
+
+        <RouterLink to="/historique" :class="{ active: isHistoriqueActive }">
+          Historique
+        </RouterLink>
       </nav>
 
-      <RouterLink to="/login" class="login-btn">
+      <RouterLink v-if="!isAuthenticated" to="/login" class="login-btn">
         <img :src="authIcon" alt="Icône connexion" class="login-icon" />
         <span>Se connecter</span>
       </RouterLink>
+
+      <button v-else class="login-btn logout-btn" @click="handleLogout">
+        <img :src="authIcon" alt="Icône déconnexion" class="login-icon" />
+        <span>Déconnexion</span>
+      </button>
     </div>
   </header>
 </template>
@@ -93,10 +135,16 @@ const route = useRoute()
   display: flex;
   align-items: center;
   gap: 8px;
+  border: none;
+  cursor: pointer;
 }
 
 .login-btn:hover {
-  background: #F2F6FF;
+  background: #f2f6ff;
+}
+
+.logout-btn {
+  font-family: inherit;
 }
 
 .login-icon {
@@ -106,14 +154,12 @@ const route = useRoute()
   display: block;
 }
 
-/* Laptop */
 @media (max-width: 1200px) {
   .container {
     padding: 0 80px;
   }
 }
 
-/* Tablet */
 @media (max-width: 900px) {
   .container {
     padding: 0 40px;
@@ -129,7 +175,6 @@ const route = useRoute()
   }
 }
 
-/* Mobile */
 @media (max-width: 600px) {
   .container {
     flex-direction: column;

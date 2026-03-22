@@ -1,14 +1,77 @@
 <script setup>
 import AuthContainer from "@/components/AuthContainer.vue"
 import { ref } from "vue"
+import { useRouter, RouterLink } from "vue-router"
+import { signupUser } from "@/services/auth"
 
 import eyeOpen from "@/assets/icons/Icon-eye-open.png"
 import eyeClosed from "@/assets/icons/Icon-eye-closed.png"
 
+const router = useRouter()
+
+const firstName = ref("")
+const lastName = ref("")
+const email = ref("")
+const password = ref("")
+const confirmPassword = ref("")
+const errorMessage = ref("")
+const loading = ref(false)
 const showPassword = ref(false)
+const showConfirmPassword = ref(false)
 
 const togglePassword = () => {
   showPassword.value = !showPassword.value
+}
+
+const toggleConfirmPassword = () => {
+  showConfirmPassword.value = !showConfirmPassword.value
+}
+
+const handleSignup = async () => {
+  errorMessage.value = ""
+
+  if (
+    !firstName.value ||
+    !lastName.value ||
+    !email.value ||
+    !password.value ||
+    !confirmPassword.value
+  ) {
+    errorMessage.value = "Veuillez remplir tous les champs."
+    return
+  }
+
+  if (password.value.length < 6) {
+    errorMessage.value = "Le mot de passe doit contenir au moins 6 caractères."
+    return
+  }
+
+  if (password.value !== confirmPassword.value) {
+    errorMessage.value = "Les mots de passe ne correspondent pas."
+    return
+  }
+
+  try {
+    loading.value = true
+    await signupUser(email.value, password.value)
+    router.push("/generer")
+  } catch (error) {
+    console.error("Firebase signup error:", error)
+
+    if (error.code === "auth/email-already-in-use") {
+      errorMessage.value = "Cet email est déjà utilisé."
+    } else if (error.code === "auth/invalid-email") {
+      errorMessage.value = "Adresse email invalide."
+    } else if (error.code === "auth/weak-password") {
+      errorMessage.value = "Mot de passe trop faible."
+    } else if (error.code === "auth/operation-not-allowed") {
+      errorMessage.value = "Email/Password n'est pas activé dans Firebase."
+    } else {
+      errorMessage.value = error.code || error.message || "Impossible de créer le compte."
+    }
+  } finally {
+    loading.value = false
+  }
 }
 </script>
 
@@ -17,12 +80,13 @@ const togglePassword = () => {
     <div class="signup-content">
       <h1>S'inscrire</h1>
 
-      <form class="signup-form">
+      <form class="signup-form" @submit.prevent="handleSignup">
         <div class="name-row">
           <div class="input-group half">
             <label for="firstName">Prénom</label>
             <input
               id="firstName"
+              v-model="firstName"
               type="text"
               placeholder="Veuillez entrer votre prénom"
             />
@@ -32,6 +96,7 @@ const togglePassword = () => {
             <label for="lastName">Nom</label>
             <input
               id="lastName"
+              v-model="lastName"
               type="text"
               placeholder="Veuillez entrer votre nom"
             />
@@ -42,6 +107,7 @@ const togglePassword = () => {
           <label for="email">Email</label>
           <input
             id="email"
+            v-model="email"
             type="email"
             placeholder="Veuillez entrer votre email"
           />
@@ -52,6 +118,7 @@ const togglePassword = () => {
           <div class="password-field">
             <input
               id="password"
+              v-model="password"
               :type="showPassword ? 'text' : 'password'"
               placeholder="Veuillez entrer votre mot de passe"
             />
@@ -66,14 +133,34 @@ const togglePassword = () => {
 
         <div class="input-group">
           <label for="confirmPassword">Confirmer le mot de passe</label>
-          <input
-            id="confirmPassword"
-            type="password"
-            placeholder="Veuillez confirmer votre mot de passe"
-          />
+          <div class="password-field">
+            <input
+              id="confirmPassword"
+              v-model="confirmPassword"
+              :type="showConfirmPassword ? 'text' : 'password'"
+              placeholder="Veuillez confirmer votre mot de passe"
+            />
+            <img
+              :src="showConfirmPassword ? eyeOpen : eyeClosed"
+              alt="Afficher ou masquer le mot de passe"
+              class="eye-icon"
+              @click="toggleConfirmPassword"
+            />
+          </div>
         </div>
 
-        <button type="submit" class="signup-btn">S'inscrire</button>
+        <button type="submit" class="signup-btn" :disabled="loading">
+          {{ loading ? "Création..." : "S'inscrire" }}
+        </button>
+
+        <p v-if="errorMessage" class="error-message">
+          {{ errorMessage }}
+        </p>
+
+        <p class="register-text">
+          Vous avez déjà un compte ?
+          <RouterLink to="/login">Connectez-vous ici.</RouterLink>
+        </p>
       </form>
     </div>
   </AuthContainer>
@@ -167,14 +254,42 @@ const togglePassword = () => {
   background: #0c2347;
 }
 
-/* Laptop */
+.signup-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.error-message {
+  margin-top: 4px;
+  text-align: center;
+  font-size: 14px;
+  color: #d32f2f;
+  font-weight: 500;
+}
+
+.register-text {
+  margin-top: 8px;
+  text-align: center;
+  font-size: 14px;
+  color: #222;
+}
+
+.register-text a {
+  color: #0b1c2d;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.register-text a:hover {
+  text-decoration: underline;
+}
+
 @media (max-width: 1200px) {
   .signup-content h1 {
     font-size: 30px;
   }
 }
 
-/* Tablet */
 @media (max-width: 900px) {
   .signup-content h1 {
     font-size: 28px;
@@ -190,7 +305,6 @@ const togglePassword = () => {
   }
 }
 
-/* Mobile */
 @media (max-width: 600px) {
   .signup-content h1 {
     font-size: 26px;

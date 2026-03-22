@@ -1,15 +1,51 @@
 <script setup>
 import AuthContainer from "@/components/AuthContainer.vue"
-import { RouterLink } from "vue-router"
+import { RouterLink, useRouter } from "vue-router"
 import { ref } from "vue"
+import { loginUser } from "@/services/auth"
 
 import eyeOpen from "@/assets/icons/Icon-eye-open.png"
 import eyeClosed from "@/assets/icons/Icon-eye-closed.png"
 
+const router = useRouter()
+
+const email = ref("")
+const password = ref("")
+const errorMessage = ref("")
+const loading = ref(false)
 const showPassword = ref(false)
 
 const togglePassword = () => {
   showPassword.value = !showPassword.value
+}
+
+const handleLogin = async () => {
+  errorMessage.value = ""
+
+  if (!email.value || !password.value) {
+    errorMessage.value = "Veuillez remplir tous les champs."
+    return
+  }
+
+  try {
+    loading.value = true
+    await loginUser(email.value, password.value)
+    router.push("/generer")
+  } catch (error) {
+    console.error("Firebase login error:", error)
+
+    if (error.code === "auth/invalid-email") {
+      errorMessage.value = "Adresse email invalide."
+    } else if (error.code === "auth/invalid-credential") {
+      errorMessage.value = "Email ou mot de passe incorrect."
+    } else if (error.code === "auth/user-disabled") {
+      errorMessage.value = "Ce compte a été désactivé."
+    } else {
+      errorMessage.value = error.code || error.message || "Erreur de connexion."
+    }
+  } finally {
+    loading.value = false
+  }
 }
 </script>
 
@@ -18,11 +54,12 @@ const togglePassword = () => {
     <div class="login-content">
       <h1>Se connecter</h1>
 
-      <form class="login-form">
+      <form class="login-form" @submit.prevent="handleLogin">
         <div class="input-group">
           <label for="email">Email</label>
           <input
             id="email"
+            v-model="email"
             type="email"
             placeholder="Veuillez entrer votre email"
           />
@@ -33,6 +70,7 @@ const togglePassword = () => {
           <div class="password-field">
             <input
               id="password"
+              v-model="password"
               :type="showPassword ? 'text' : 'password'"
               placeholder="Veuillez entrer votre mot de passe"
             />
@@ -57,7 +95,13 @@ const togglePassword = () => {
           </RouterLink>
         </div>
 
-        <button type="submit" class="login-btn">Se connecter</button>
+        <button type="submit" class="login-btn" :disabled="loading">
+          {{ loading ? "Connexion..." : "Se connecter" }}
+        </button>
+
+        <p v-if="errorMessage" class="error-message">
+          {{ errorMessage }}
+        </p>
 
         <p class="register-text">
           Vous n’avez pas de compte ?
@@ -179,6 +223,19 @@ const togglePassword = () => {
   background: #0c2347;
 }
 
+.login-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.error-message {
+  margin-top: 8px;
+  text-align: center;
+  font-size: 14px;
+  color: #d32f2f;
+  font-weight: 500;
+}
+
 .register-text {
   margin-top: 8px;
   text-align: center;
@@ -196,14 +253,12 @@ const togglePassword = () => {
   text-decoration: underline;
 }
 
-/* Laptop */
 @media (max-width: 1200px) {
   .login-content h1 {
     font-size: 30px;
   }
 }
 
-/* Tablet */
 @media (max-width: 900px) {
   .login-content h1 {
     font-size: 28px;
@@ -221,7 +276,6 @@ const togglePassword = () => {
   }
 }
 
-/* Mobile */
 @media (max-width: 600px) {
   .login-content h1 {
     font-size: 26px;

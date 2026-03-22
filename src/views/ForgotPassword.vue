@@ -1,6 +1,7 @@
 <script>
 import AuthContainer from "@/components/AuthContainer.vue"
 import { RouterLink } from "vue-router"
+import { resetPassword } from "@/services/auth"
 import forgotPasswordImage from "@/assets/images/mot-de-passe-oublie.png"
 
 export default {
@@ -13,12 +14,32 @@ export default {
     return {
       email: "",
       message: "",
+      errorMessage: "",
+      loading: false,
       forgotPasswordImage,
     }
   },
   methods: {
-    sendResetEmail() {
-      this.message = "Si un compte existe avec cet email, un lien de réinitialisation a été envoyé."
+    async sendResetEmail() {
+      this.message = ""
+      this.errorMessage = ""
+
+      if (!this.email) {
+        this.errorMessage = "Veuillez entrer votre email."
+        return
+      }
+
+      try {
+        this.loading = true
+        await resetPassword(this.email)
+        this.message =
+          "Si un compte existe avec cet email, un lien de réinitialisation a été envoyé."
+      } catch (error) {
+        this.errorMessage =
+          "Impossible d'envoyer l'email de réinitialisation."
+      } finally {
+        this.loading = false
+      }
     },
   },
 }
@@ -45,9 +66,12 @@ export default {
           />
         </div>
 
-        <button type="submit" class="login-btn">Envoyer</button>
+        <button type="submit" class="login-btn" :disabled="loading">
+          {{ loading ? "Envoi..." : "Envoyer" }}
+        </button>
 
         <p v-if="message" class="info-message">{{ message }}</p>
+        <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
 
         <p class="register-text">
           <RouterLink to="/login">Retour à la connexion</RouterLink>
@@ -124,11 +148,23 @@ export default {
   background: #0c2347;
 }
 
+.login-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
 .info-message {
   margin-top: 8px;
   text-align: center;
   font-size: 14px;
   color: #0b1c2d;
+}
+
+.error-message {
+  margin-top: 8px;
+  text-align: center;
+  font-size: 14px;
+  color: #d32f2f;
 }
 
 .register-text {

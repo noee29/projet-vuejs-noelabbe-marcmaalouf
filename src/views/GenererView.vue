@@ -29,12 +29,10 @@ const handleSelect = (type) => {
       <CVContainer
         :imageSrc="cvMain"
         label="CV À LA MAIN"
-        type="main"
+        type="colorful"
         @select="handleSelect"
       />
     </section>
-
-
   </div>
 </template>
 
@@ -84,7 +82,6 @@ const handleSelect = (type) => {
   padding: 0 60px;
 }
 
-/* Laptop */
 @media (max-width: 1200px) {
   .generer-hero {
     padding: 50px 80px 70px;
@@ -100,7 +97,6 @@ const handleSelect = (type) => {
   }
 }
 
-/* Tablet */
 @media (max-width: 900px) {
   .generer-hero {
     padding: 40px 40px 60px;
@@ -116,7 +112,6 @@ const handleSelect = (type) => {
   }
 }
 
-/* Mobile */
 @media (max-width: 600px) {
   .generer-hero {
     padding: 36px 24px 56px;
