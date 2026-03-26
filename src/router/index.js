@@ -9,6 +9,8 @@ import ForgotPassword from "../views/ForgotPassword.vue"
 import GenererView from "../views/GenererView.vue"
 import CVEditorView from "../views/CVEditorView.vue"
 import CVColorfulView from "../views/CVColorfulView.vue"
+import HistoriqueView from "../views/HistoriqueView.vue"
+import NotFoundView from "../views/NotFoundView.vue"
 
 const routes = [
   {
@@ -52,11 +54,12 @@ const routes = [
   {
     path: "/historique",
     name: "historique",
-    component: () => import("../views/HistoriqueView.vue"),
+    component: HistoriqueView,
   },
   {
     path: "/:pathMatch(.*)*",
-    redirect: "/",
+    name: "not-found",
+    component: NotFoundView,
   },
 ]
 
