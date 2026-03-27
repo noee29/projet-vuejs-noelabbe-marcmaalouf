@@ -82,7 +82,7 @@ const dateFinInvalide = (element) => {
   const debut = new Date(Number(element.anneeDebut), Number(element.moisDebut) - 1, 1)
   const fin = new Date(Number(element.anneeFin), Number(element.moisFin) - 1, 1)
 
-  if (fin <= debut) {
+  if (fin < debut) {
     return true
   }
 
@@ -146,7 +146,7 @@ const telechargerPDF = async () => {
   }
 
   if (aDesDatesInvalides()) {
-    alert("La date de fin doit etre strictement superieure a la date de debut.")
+    alert("La date de fin ne peut pas etre avant la date de debut.")
     return
   }
 
@@ -298,7 +298,7 @@ const annees = computed(() => {
                 </div>
               </div>
               <p v-if="dateFinInvalide(edu)" class="date-error">
-                La date de fin doit etre strictement superieure a la date de debut.
+                La date de fin ne peut pas etre avant la date de debut.
               </p>
             </div>
             <button class="btn-ajouter" @click="ajouterFormation">+ Ajouter une formation</button>
@@ -360,7 +360,7 @@ const annees = computed(() => {
                 </div>
               </div>
               <p v-if="dateFinInvalide(exp)" class="date-error">
-                La date de fin doit etre strictement superieure a la date de debut.
+                La date de fin ne peut pas etre avant la date de debut.
               </p>
             </div>
             <button class="btn-ajouter" @click="ajouterExperience">+ Ajouter une expérience</button>
@@ -471,7 +471,7 @@ const annees = computed(() => {
                 </div>
               </div>
               <p v-if="dateFinInvalide(ben)" class="date-error">
-                La date de fin doit etre strictement superieure a la date de debut.
+                La date de fin ne peut pas etre avant la date de debut.
               </p>
             </div>
             <button class="btn-ajouter" @click="ajouterBenevole">+ Ajouter un bénévolat</button>
