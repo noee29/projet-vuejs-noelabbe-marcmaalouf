@@ -1,6 +1,5 @@
 import { createRouter, createWebHistory } from "vue-router"
-import { auth } from "../firebase"
-import { onAuthStateChanged } from "firebase/auth"
+import { useAuthStore } from "@/stores/authStore"
 
 import HomeView from "../views/HomeView.vue"
 import Login from "../views/Login.vue"
@@ -68,23 +67,11 @@ const router = createRouter({
   routes,
 })
 
-const getCurrentUser = () => {
-  return new Promise((resolve, reject) => {
-    const unsubscribe = onAuthStateChanged(
-      auth,
-      (user) => {
-        unsubscribe()
-        resolve(user)
-      },
-      reject
-    )
-  })
-}
-
 router.beforeEach(async (to) => {
-  const user = await getCurrentUser()
+  const authStore = useAuthStore()
+  await authStore.waitUntilReady()
 
-  if (to.meta.guestOnly && user) {
+  if (to.meta.guestOnly && authStore.isAuthenticated) {
     return "/generer"
   }
 

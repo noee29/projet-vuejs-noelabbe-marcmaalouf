@@ -1,36 +1,22 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from "vue"
+import { computed } from "vue"
 import { RouterLink, useRoute, useRouter } from "vue-router"
-import { onAuthStateChanged } from "firebase/auth"
-import { auth } from "@/firebase"
-import { logoutUser } from "@/services/auth"
+import { useAuthStore } from "@/stores/authStore"
 
 import logo from "@/assets/images/Logo_SmartCV.png"
 import authIcon from "@/assets/icons/Icon-auth.png"
 
 const route = useRoute()
 const router = useRouter()
-
-const isAuthenticated = ref(false)
-
-let unsubscribe = null
-
-onMounted(() => {
-  unsubscribe = onAuthStateChanged(auth, (user) => {
-    isAuthenticated.value = !!user
-  })
-})
-
-onUnmounted(() => {
-  if (unsubscribe) unsubscribe()
-})
+const authStore = useAuthStore()
 
 const isGenererActive = computed(() => route.path.startsWith("/generer"))
 const isHistoriqueActive = computed(() => route.path.startsWith("/historique"))
+const isAuthenticated = computed(() => authStore.isAuthenticated)
 
 const handleLogout = async () => {
   try {
-    await logoutUser()
+    await authStore.logout()
     router.push("/login")
   } catch (error) {
     console.error("Logout error:", error)

@@ -2,13 +2,13 @@
 import AuthContainer from "@/components/AuthContainer.vue"
 import { ref, computed } from "vue"
 import { useRouter, RouterLink } from "vue-router"
-import { signupUser } from "@/services/auth"
-import { creerUtilisateur } from "@/services/firestore"
+import { useAuthStore } from "@/stores/authStore"
 
 import eyeOpen from "@/assets/icons/Icon-eye-open.png"
 import eyeClosed from "@/assets/icons/Icon-eye-closed.png"
 
 const router = useRouter()
+const authStore = useAuthStore()
 
 const firstName = ref("")
 const lastName = ref("")
@@ -16,7 +16,6 @@ const email = ref("")
 const password = ref("")
 const confirmPassword = ref("")
 const errorMessage = ref("")
-const loading = ref(false)
 const showPassword = ref(false)
 const showConfirmPassword = ref(false)
 
@@ -29,35 +28,19 @@ const toggleConfirmPassword = () => {
 }
 
 const motDePasseType = computed(() => {
-  if (showPassword.value) {
-    return "text"
-  }
-
-  return "password"
+  return showPassword.value ? "text" : "password"
 })
 
 const iconeMotDePasse = computed(() => {
-  if (showPassword.value) {
-    return eyeOpen
-  }
-
-  return eyeClosed
+  return showPassword.value ? eyeOpen : eyeClosed
 })
 
 const confirmationMotDePasseType = computed(() => {
-  if (showConfirmPassword.value) {
-    return "text"
-  }
-
-  return "password"
+  return showConfirmPassword.value ? "text" : "password"
 })
 
 const iconeConfirmationMotDePasse = computed(() => {
-  if (showConfirmPassword.value) {
-    return eyeOpen
-  }
-
-  return eyeClosed
+  return showConfirmPassword.value ? eyeOpen : eyeClosed
 })
 
 const handleSignup = async () => {
@@ -85,20 +68,15 @@ const handleSignup = async () => {
   }
 
   try {
-    loading.value = true
-    const userCredential = await signupUser(email.value, password.value)
-
-    await creerUtilisateur(
-      userCredential.user.uid,
+    await authStore.signup(
       firstName.value,
       lastName.value,
       email.value,
+      password.value
     )
 
     router.push("/generer")
   } catch (error) {
-    console.error("Firebase signup error:", error)
-
     if (error.code === "auth/email-already-in-use") {
       errorMessage.value = "Cet email est déjà utilisé."
     } else if (error.code === "auth/invalid-email") {
@@ -110,10 +88,10 @@ const handleSignup = async () => {
     } else {
       errorMessage.value = error.code || error.message || "Impossible de créer le compte."
     }
-  } finally {
-    loading.value = false
   }
 }
+
+const loading = computed(() => authStore.loading)
 </script>
 
 <template>

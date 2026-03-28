@@ -1,87 +1,42 @@
 <script setup>
 import { ref, computed, onMounted } from "vue"
 import { useRouter } from "vue-router"
-import { onAuthStateChanged } from "firebase/auth"
-import { auth } from "@/firebase"
-import { getCVsUtilisateur, supprimerCV } from "@/services/firestore"
+import { useAuthStore } from "@/stores/authStore"
+import { useCvStore } from "@/stores/cvStore"
 import historiqueVide from "@/assets/images/historique_vide.png"
 
 const router = useRouter()
+const authStore = useAuthStore()
+const cvStore = useCvStore()
 
-const loading = ref(true)
-const errorMessage = ref("")
-const infoMessage = ref("")
 const utilisateurNonConnecte = ref(false)
-const historique = ref([])
 const imageActive = ref("")
 
-const totalCV = computed(() => historique.value.length)
-const texteCompteur = computed(() => {
-  return "Vous avez " + totalCV.value + " CV"
-})
+const loading = computed(() => cvStore.loading)
+const errorMessage = computed(() => cvStore.error)
+const historique = computed(() => cvStore.cvs)
+const texteCompteur = computed(() => cvStore.texteCompteur)
 
-// Attend la résolution de l'état de connexion Firebase.
-const attendreUtilisateur = () => {
-  return new Promise((resolve) => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      unsubscribe()
-      resolve(user)
-    })
-  })
-}
-
-// Charge tous les CV de l'utilisateur connecté.
 const chargerHistorique = async () => {
-  loading.value = true
-  errorMessage.value = ""
-  infoMessage.value = ""
   utilisateurNonConnecte.value = false
-  historique.value = []
+  cvStore.clearMessages()
 
-  const user = await attendreUtilisateur()
-  if (!user) {
+  await authStore.waitUntilReady()
+
+  if (!authStore.user) {
     utilisateurNonConnecte.value = true
-    loading.value = false
     return
   }
 
   try {
-    const cvs = await getCVsUtilisateur(user.uid)
-
-    for (let i = 0; i < cvs.length; i++) {
-      const cv = cvs[i]
-      const item = {
-        id: cv.id,
-        type: cv.type,
-        titre: cv.titre,
-        email: cv.email,
-        complet: cv.complet,
-        apercuImage: cv.apercuImage,
-        messageEtat: "Continuez a modifier votre CV",
-      }
-
-      historique.value.push(item)
-    }
-
+    await cvStore.fetchCVs(authStore.user.uid)
   } catch (error) {
     console.error("Erreur historique:", error)
-    errorMessage.value = "Erreur lors de la recuperation de l'historique."
   }
-
-  loading.value = false
 }
 
-// Ouvre le formulaire lié au type de CV pour reprendre ou modifier.
 const ouvrirCV = (cv) => {
-  if (!cv) {
-    return
-  }
-
-  if (!cv.id) {
-    return
-  }
-
-  if (!cv.type) {
+  if (!cv || !cv.id || !cv.type) {
     return
   }
 
@@ -89,11 +44,7 @@ const ouvrirCV = (cv) => {
 }
 
 const ouvrirApercuGrand = (cv) => {
-  if (!cv) {
-    return
-  }
-
-  if (!cv.apercuImage) {
+  if (!cv || !cv.apercuImage) {
     return
   }
 
@@ -105,12 +56,7 @@ const fermerApercuGrand = () => {
 }
 
 const supprimerCVItem = async (cv) => {
-  if (!cv || !cv.id) {
-    return
-  }
-
-  const user = auth.currentUser
-  if (!user) {
+  if (!cv || !cv.id || !authStore.user) {
     return
   }
 
@@ -120,11 +66,9 @@ const supprimerCVItem = async (cv) => {
   }
 
   try {
-    await supprimerCV(user.uid, cv.id)
-    await chargerHistorique()
+    await cvStore.deleteCV(authStore.user.uid, cv.id)
   } catch (error) {
     console.error("Erreur suppression:", error)
-    errorMessage.value = "Impossible de supprimer ce CV."
   }
 }
 

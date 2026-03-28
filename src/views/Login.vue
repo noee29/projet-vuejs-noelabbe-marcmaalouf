@@ -1,18 +1,18 @@
 <script setup>
 import AuthContainer from "@/components/AuthContainer.vue"
-import { RouterLink, useRouter } from "vue-router"
 import { ref, computed } from "vue"
-import { loginUser } from "@/services/auth"
+import { useRouter, RouterLink } from "vue-router"
+import { useAuthStore } from "@/stores/authStore"
 
 import eyeOpen from "@/assets/icons/Icon-eye-open.png"
 import eyeClosed from "@/assets/icons/Icon-eye-closed.png"
 
 const router = useRouter()
+const authStore = useAuthStore()
 
 const email = ref("")
 const password = ref("")
 const errorMessage = ref("")
-const loading = ref(false)
 const showPassword = ref(false)
 
 const togglePassword = () => {
@@ -20,19 +20,11 @@ const togglePassword = () => {
 }
 
 const motDePasseType = computed(() => {
-  if (showPassword.value) {
-    return "text"
-  }
-
-  return "password"
+  return showPassword.value ? "text" : "password"
 })
 
 const iconeMotDePasse = computed(() => {
-  if (showPassword.value) {
-    return eyeOpen
-  }
-
-  return eyeClosed
+  return showPassword.value ? eyeOpen : eyeClosed
 })
 
 const handleLogin = async () => {
@@ -44,25 +36,20 @@ const handleLogin = async () => {
   }
 
   try {
-    loading.value = true
-    await loginUser(email.value, password.value)
+    await authStore.login(email.value, password.value)
     router.push("/generer")
   } catch (error) {
-    console.error("Firebase login error:", error)
-
-    if (error.code === "auth/invalid-email") {
-      errorMessage.value = "Adresse email invalide."
-    } else if (error.code === "auth/invalid-credential") {
+    if (error.code === "auth/invalid-credential") {
       errorMessage.value = "Email ou mot de passe incorrect."
-    } else if (error.code === "auth/user-disabled") {
-      errorMessage.value = "Ce compte a été désactivé."
+    } else if (error.code === "auth/invalid-email") {
+      errorMessage.value = "Adresse email invalide."
     } else {
-      errorMessage.value = error.code || error.message || "Erreur de connexion."
+      errorMessage.value = error.code || error.message || "Impossible de se connecter."
     }
-  } finally {
-    loading.value = false
   }
 }
+
+const loading = computed(() => authStore.loading)
 </script>
 
 <template>
